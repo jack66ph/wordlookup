@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教育部國語辭典查詢 - 純前端正體中文辭典</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #7c2d12;      /* 典雅赭紅 / 書香紅 */
+      --primary-hover: #9a3412;
+      --primary-light: #ffedd5;
+      --secondary-color: #1e3a8a;    /* 墨藍 */
+      --accent-color: #b45309;       /* 琥珀褐 */
+      --text-dark: #1c1917;          /* 墨黑 */
+      --text-muted: #57534e;         /* 灰褐 */
+      --bg-page: #faf6f0;            /* 溫潤紙色 */
+      --bg-card: #ffffff;
+      --bg-accent: #f5ede0;
+      --border-color: #e7ded1;
+      --border-focus: #7c2d12;
+      --shadow-sm: 0 1px 3px rgba(60, 40, 20, 0.08);
+      --shadow-md: 0 4px 12px rgba(60, 40, 20, 0.1);
+      --shadow-lg: 0 10px 25px rgba(60, 40, 20, 0.12);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-kai: "DFKai-SB", "標楷體", "BiauKai", "Kaiti TC", "KaiTi", "TW-Kai", serif;
+      --font-serif: var(--font-kai);
+      --font-sans: var(--font-kai);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    *, button, input, select, textarea {
+      font-family: var(--font-kai);
+    }
+
+    body {
+      font-family: var(--font-kai) !important;
+      background-color: var(--bg-page);
+      color: var(--text-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(#e7ded1 0.75px, transparent 0.75px),
+        radial-gradient(#e7ded1 0.75px, #faf6f0 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+    }
+
+    /* 頂部橫幅 */
+    header {
+      background: linear-gradient(135deg, #451a03 0%, #7c2d12 60%, #9a3412 100%);
+      color: #fff;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      border-bottom: 3px solid #d97706;
+    }
+
+    .header-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .site-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .site-brand .seal-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background-color: #b91c1c;
+      border: 2px solid #fecaca;
+      border-radius: 8px;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .site-title h1 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .site-title p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      color: #fde68a;
+    }
+
+    .header-badge {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #fef08a;
+      backdrop-filter: blur(4px);
+    }
+
+    /* 主要容器 */
+    main {
+      max-width: 960px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1rem 3rem;
+      flex: 1;
+    }
+
+    /* 輸入區塊 - 嚴格 20pt 大小 */
+    .search-section {
+      background-color: var(--bg-card);
+      padding: 1.75rem 2rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .input-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.65rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .input-label span.spec-hint {
+      font-size: 0.8rem;
+      font-weight: normal;
+      color: var(--text-muted);
+      background-color: var(--bg-accent);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* 【規格重點】文字方塊輸入字體嚴格設定為 20pt (20點大小) */
+    .search-input {
+      flex: 1;
+      font-family: var(--font-kai) !important;
+      font-size: 20pt !important; /* 使用者指定規格：20點大小 */
+      line-height: 1.4;
+      padding: 0.5rem 1rem;
+      height: 60px;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: #fff;
+      color: var(--text-dark);
+      outline: none;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px rgba(124, 45, 18, 0.12);
+    }
+
+    .search-input::placeholder {
+      font-size: 16pt;
+      color: #a8a29e;
+      font-family: var(--font-kai);
+    }
+
+    .btn-search {
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 1.75rem;
+      height: 60px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+
+    .btn-search:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-search:active {
+      transform: translateY(0);
+    }
+
+    .btn-clear {
+      position: absolute;
+      right: 140px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #a8a29e;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      display: none;
+      border-radius: 50%;
+    }
+
+    .btn-clear:hover {
+      color: var(--text-dark);
+      background-color: #f5f5f4;
+    }
+
+    /* 快捷關鍵字與推薦詞語 */
+    .quick-chips {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .chip-item {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      background-color: var(--bg-accent);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .chip-item:hover {
+      background-color: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .history-chips {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border-color);
+      display: none;
+    }
+
+    /* 載入與錯誤狀態 */
+    .status-panel {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background-color: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-panel {
+      border-color: #fca5a5;
+      background-color: #fef2f2;
+      color: #991b1b;
+    }
+
+    .error-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-desc {
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+      color: #7f1d1d;
+    }
+
+    .split-suggest {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #fff;
+      border-radius: var(--radius-md);
+      display: inline-block;
+      border: 1px solid #fecaca;
+    }
+
+    /* 查詢結果卡片 */
+    .result-card {
+      background-color: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 大字體該詞語展示區 (80點) */
+    .word-header {
+      background: linear-gradient(180deg, #fffbf5 0%, #fff 100%);
+      padding: 2.5rem 2rem 2rem;
+      border-bottom: 2px solid var(--border-color);
+      position: relative;
+    }
+
+    .word-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .word-meta-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.65rem;
+      background-color: var(--bg-accent);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+
+    .meta-tag strong {
+      color: var(--primary-color);
+    }
+
+    .actions-bar {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-accent);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    /* 【規格重點】下面出現大字體的該詞語：嚴格設定為 80 點大小 (80pt) */
+    .word-display-container {
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .word-title {
+      font-family: var(--font-serif);
+      font-size: 80pt !important; /* 使用者指定規格：80點大字體 */
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--primary-color);
+      letter-spacing: 2px;
+      word-break: break-word;
+      text-shadow: 1px 2px 4px rgba(124, 45, 18, 0.08);
+    }
+
+    /* 注音與拼音群組 */
+    .pronunciation-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .bopomofo-text {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--secondary-color);
+      letter-spacing: 2px;
+      background: rgba(30, 58, 138, 0.06);
+      padding: 0.2rem 0.75rem;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .pinyin-text {
+      font-family: var(--font-kai);
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .btn-speak {
+      background-color: var(--secondary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+      width: fit-content;
+      transition: background 0.15s ease;
+    }
+
+    .btn-speak:hover {
+      background-color: #1d4ed8;
+    }
+
+    /* 多音字選單切換（若詞條有多個讀音） */
+    .heteronyms-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-item {
+      padding: 0.35rem 0.9rem;
+      font-size: 0.95rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      background: var(--bg-accent);
+      border: 1px solid var(--border-color);
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+
+    .tab-item.active {
+      background: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
+
+    /* 【規格重點】正常字體大小 (20點大小) 的該詞語解釋 */
+    .word-body {
+      padding: 2.25rem 2.5rem;
+      background-color: #fff;
+    }
+
+    .section-subtitle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary-light);
+    }
+
+    .section-subtitle h3 {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .font-spec-badge {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background-color: var(--bg-accent);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    /* 解釋列表容器 */
+    .definitions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .definition-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .definition-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .def-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 38px;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: 50%;
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(124, 45, 18, 0.2);
+    }
+
+    .def-content {
+      flex: 1;
+    }
+
+    .pos-badge {
+      display: inline-block;
+      background-color: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      padding: 0.15rem 0.65rem;
+      border-radius: 4px;
+      font-size: 14pt;
+      font-weight: 700;
+      margin-right: 0.6rem;
+      margin-bottom: 0.35rem;
+      font-family: var(--font-serif);
+      vertical-align: middle;
+    }
+
+    /* 【規格重點】詞語解釋文字內容嚴格設定為 20pt (20點大小) */
+    .definition-text {
+      font-family: var(--font-serif);
+      font-size: 20pt !important; /* 使用者指定規格：20點大小 */
+      line-height: 1.75;
+      color: var(--text-dark);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* 例句與引文 */
+    .def-examples {
+      margin: 0.6rem 0;
+      padding: 0.6rem 1rem;
+      background-color: #f8fafc;
+      border-left: 4px solid #3b82f6;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 16pt;
+      line-height: 1.6;
+      color: #1e293b;
+    }
+
+    .def-quotes {
+      margin: 0.6rem 0;
+      padding: 0.6rem 1rem;
+      background-color: #fafaf9;
+      border-left: 4px solid var(--accent-color);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 16pt;
+      line-height: 1.6;
+      color: #44403c;
+      font-family: var(--font-serif);
+    }
+
+    .synonyms-antonyms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.6rem;
+      font-size: 14pt;
+    }
+
+    .relation-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-accent);
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .relation-label {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .relation-words {
+      color: var(--text-dark);
+    }
+
+    /* 權威來源標示與官方辭典外連 */
+    .source-attribution-card {
+      margin-top: 2rem;
+      padding: 1.25rem 1.5rem;
+      background: #fafaf9;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .source-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .source-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .source-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .official-links {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-link-official {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #fff;
+      color: var(--secondary-color);
+      border: 1px solid #bfdbfe;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-link-official:hover {
+      background: #eff6ff;
+      border-color: var(--secondary-color);
+    }
+
+    /* 頁腳 */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: #f5ede0;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      margin-top: auto;
+    }
+
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* 列印友善排版 (適合做學習單/字卡) */
+    @media print {
+      header, .search-section, footer, .actions-bar, .official-links, .btn-speak {
+        display: none !important;
+      }
+      body {
+        background: #fff !important;
+      }
+      .result-card {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .word-title {
+        font-size: 80pt !important;
+        color: #000 !important;
+      }
+      .definition-text {
+        font-size: 20pt !important;
+        color: #000 !important;
+      }
+    }
+
+    /* 響應式微調 */
+    @media (max-width: 768px) {
+      .search-box-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-input {
+        width: 100%;
+      }
+      .btn-search {
+        width: 100%;
+        padding: 0.75rem;
+      }
+      .btn-clear {
+        right: 15px;
+        top: 30px;
+      }
+      .word-display-container {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .word-title {
+        font-size: 60pt !important; /* 行動端避免過度破版，仍保持極大字體 */
+      }
+      .word-body {
+        padding: 1.5rem 1rem;
+      }
+      .definition-text {
+        font-size: 18pt !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部品牌區 -->
+  <header>
+    <div class="header-container">
+      <div class="site-brand">
+        <span class="seal-icon">典</span>
+        <div class="site-title">
+          <h1>教育部國語辭典查詢</h1>
+          <p>純前端臺灣正體中文權威辭典檢索系統</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        ✦ 純前端架構 ‧ 資料源自教育部 ✦
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main>
+    <!-- 搜尋輸入方塊區 (20點字體) -->
+    <section class="search-section" aria-label="詞語輸入區">
+      <div class="input-label">
+        <label for="searchInput">請輸入欲查詢之國語字詞：</label>
+        <span class="spec-hint">輸入框字體規格：20點 (20pt)</span>
+      </div>
+
+      <div class="search-box-wrapper">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="輸入詞語（如：學習、臺灣、欣欣向榮）" 
+          autocomplete="off"
+          autofocus
+        />
+        <button id="clearBtn" class="btn-clear" title="清除內容" aria-label="清除內容">✕</button>
+        <button id="searchBtn" class="btn-search">
+          <span>查詢</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 快速範例詞語 -->
+      <div class="quick-chips">
+        <span>熱門字詞範例：</span>
+        <span class="chip-item" data-word="臺灣">臺灣</span>
+        <span class="chip-item" data-word="學習">學習</span>
+        <span class="chip-item" data-word="枵腹從公">枵腹從公</span>
+        <span class="chip-item" data-word="欣欣向榮">欣欣向榮</span>
+        <span class="chip-item" data-word="萌">萌</span>
+        <span class="chip-item" data-word="同舟共濟">同舟共濟</span>
+        <span class="chip-item" data-word="字">字</span>
+      </div>
+
+      <!-- 歷史搜尋紀錄 -->
+      <div id="historyChipsContainer" class="quick-chips history-chips">
+        <span>最近查詢：</span>
+        <div id="historyChipsList" style="display:inline-flex; gap:0.5rem; flex-wrap:wrap;"></div>
+        <button id="clearHistoryBtn" style="background:none; border:none; color:#a8a29e; font-size:0.8rem; cursor:pointer; text-decoration:underline; margin-left:0.5rem;">清空歷史</button>
+      </div>
+    </section>
+
+    <!-- 狀態提示（載入中） -->
+    <div id="loadingPanel" class="status-panel" style="display: none;">
+      <div class="spinner"></div>
+      <p style="font-size: 1.15rem; color: var(--primary-color); font-weight: 600;">正向教育部辭典資料庫查詢中，請稍候...</p>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.35rem;">來源：萌典開放資料庫（相容教育部簡編本與修訂本）</p>
+    </div>
+
+    <!-- 狀態提示（查無此詞 / 錯誤） -->
+    <div id="errorPanel" class="status-panel error-panel" style="display: none;">
+      <div class="error-title" id="errorTitle">查無此詞語</div>
+      <div class="error-desc" id="errorDesc">在教育部辭典中未找到符合的資料。請確認輸入是否正確，或嘗試查詢單字。</div>
+      <div id="splitSuggestBox" class="split-suggest" style="display: none;">
+        <p style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;">您可以嘗試分開查詢組成單字：</p>
+        <div id="splitButtons" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;"></div>
+      </div>
+    </div>
+
+    <!-- 查詢結果展示卡片 -->
+    <article id="resultCard" class="result-card">
+      
+      <!-- 大字體詞語展示區 (80點字體) -->
+      <div class="word-header">
+        <div class="word-header-top">
+          <div class="word-meta-badges">
+            <span class="meta-tag">
+              字體規格：<strong>80點 (80pt)</strong>
+            </span>
+            <span id="radicalBadge" class="meta-tag" style="display: none;">
+              部首：<strong id="radicalText"></strong>
+            </span>
+            <span id="strokesBadge" class="meta-tag" style="display: none;">
+              總筆畫：<strong id="strokeCountText"></strong>
+            </span>
+            <span id="nonRadicalBadge" class="meta-tag" style="display: none;">
+              外筆畫：<strong id="nonRadicalStrokeText"></strong>
+            </span>
+          </div>
+
+          <div class="actions-bar">
+            <button id="copyBtn" class="btn-action" title="複製詞語與釋義">
+              📋 複製釋義
+            </button>
+            <button id="printBtn" class="btn-action" title="列印字卡/學習單">
+              🖨️ 列印字卡
+            </button>
+          </div>
+        </div>
+
+        <!-- 80點大字體詞語 -->
+        <div class="word-display-container">
+          <h2 id="wordTitle" class="word-title" title="查詢之正體詞語"></h2>
+
+          <div class="pronunciation-group">
+            <div id="bopomofoText" class="bopomofo-text"></div>
+            <div id="pinyinText" class="pinyin-text"></div>
+            <button id="speakBtn" class="btn-speak" title="朗讀語音">
+              🔊 聆聽發音
+            </button>
+          </div>
+        </div>
+
+        <!-- 多音字標籤切換 -->
+        <div id="heteronymsTabs" class="heteronyms-tabs" style="display: none;"></div>
+      </div>
+
+      <!-- 詞語解釋展示區 (20點字體) -->
+      <div class="word-body">
+        <div class="section-subtitle">
+          <h3>
+            <span>📖</span> 詞語釋義
+          </h3>
+          <span class="font-spec-badge">解釋文字規格：20點 (20pt)</span>
+        </div>
+
+        <!-- 解釋列表 -->
+        <div id="definitionsList" class="definitions-list"></div>
+
+        <!-- 官方公信力資料庫來源標示卡片 -->
+        <div class="source-attribution-card">
+          <div class="source-info">
+            <div class="source-title">
+              <span>🏛️</span> 資料來源：中華民國教育部國語辭典
+            </div>
+            <div class="source-detail">
+              整合《國語辭典簡編本》與《重編國語辭典修訂本》資料庫（採創用 CC-姓名標示-禁止改作 3.0 臺灣授權）
+            </div>
+          </div>
+
+          <div class="official-links">
+            <a id="moeConciseLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-link-official" title="前往教育部國語辭典簡編本官方檢索">
+              教育部簡編本 ↗
+            </a>
+            <a id="moeRevisedLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-link-official" title="前往教育部重編國語辭典修訂本官方檢索">
+              教育部修訂本 ↗
+            </a>
+            <a id="moedictLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-link-official" title="前往萌典官方條目">
+              萌典條目 ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- 頁尾 -->
+  <footer>
+    <p>教育部國語辭典純前端查詢工具 ‧ 遵照教育部開放授權條款規範</p>
+    <p>字體規格嚴格依循：輸入方塊 20pt ‧ 詞語展示 80pt ‧ 詞語解釋 20pt</p>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // DOM 元素引用
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const loadingPanel = document.getElementById('loadingPanel');
+      const errorPanel = document.getElementById('errorPanel');
+      const errorTitle = document.getElementById('errorTitle');
+      const errorDesc = document.getElementById('errorDesc');
+      const splitSuggestBox = document.getElementById('splitSuggestBox');
+      const splitButtons = document.getElementById('splitButtons');
+      const resultCard = document.getElementById('resultCard');
+
+      const wordTitle = document.getElementById('wordTitle');
+      const bopomofoText = document.getElementById('bopomofoText');
+      const pinyinText = document.getElementById('pinyinText');
+      const speakBtn = document.getElementById('speakBtn');
+      const heteronymsTabs = document.getElementById('heteronymsTabs');
+      const definitionsList = document.getElementById('definitionsList');
+
+      const radicalBadge = document.getElementById('radicalBadge');
+      const radicalText = document.getElementById('radicalText');
+      const strokesBadge = document.getElementById('strokesBadge');
+      const strokeCountText = document.getElementById('strokeCountText');
+      const nonRadicalBadge = document.getElementById('nonRadicalBadge');
+      const nonRadicalStrokeText = document.getElementById('nonRadicalStrokeText');
+
+      const copyBtn = document.getElementById('copyBtn');
+      const printBtn = document.getElementById('printBtn');
+      const moeConciseLink = document.getElementById('moeConciseLink');
+      const moeRevisedLink = document.getElementById('moeRevisedLink');
+      const moedictLink = document.getElementById('moedictLink');
+
+      const historyChipsContainer = document.getElementById('historyChipsContainer');
+      const historyChipsList = document.getElementById('historyChipsList');
+      const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+      // 狀態變數
+      let currentWordData = null;
+      let currentHeteronymIndex = 0;
+      const MAX_HISTORY = 8;
+      const HISTORY_STORAGE_KEY = 'moe_dict_search_history';
+
+      // 初始化
+      initApp();
+
+      function initApp() {
+        bindEvents();
+        renderHistory();
+
+        // 檢查網址參數是否有預設搜尋詞 (如 ?q=學習)
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (query && query.trim()) {
+          searchInput.value = query.trim();
+          performSearch(query.trim(), false);
+        } else {
+          // 預設示範查詢：臺灣
+          searchInput.value = '臺灣';
+          clearBtn.style.display = 'block';
+          performSearch('臺灣', false);
+        }
+      }
+
+      function bindEvents() {
+        // 搜尋按鈕
+        searchBtn.addEventListener('click', () => {
+          const val = searchInput.value.trim();
+          if (val) performSearch(val, true);
+        });
+
+        // 按 Enter 快速查詢
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = searchInput.value.trim();
+            if (val) performSearch(val, true);
+          }
+        });
+
+        // 偵聽輸入文字控制清除按鈕
+        searchInput.addEventListener('input', () => {
+          clearBtn.style.display = searchInput.value ? 'block' : 'none';
+        });
+
+        // 清除輸入框
+        clearBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          clearBtn.style.display = 'none';
+          searchInput.focus();
+        });
+
+        // 點擊範例標籤
+        document.querySelectorAll('.chip-item').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const word = chip.getAttribute('data-word');
+            searchInput.value = word;
+            clearBtn.style.display = 'block';
+            performSearch(word, true);
+          });
+        });
+
+        // 發音朗讀按鈕
+        speakBtn.addEventListener('click', speakCurrentWord);
+
+        // 複製釋義按鈕
+        copyBtn.addEventListener('click', copyExplanationToClipboard);
+
+        // 列印按鈕
+        printBtn.addEventListener('click', () => window.print());
+
+        // 清空歷史紀錄
+        clearHistoryBtn.addEventListener('click', clearHistory);
+
+        // 瀏覽器上一頁/下一頁 (popstate)
+        window.addEventListener('popstate', (e) => {
+          if (e.state && e.state.word) {
+            searchInput.value = e.state.word;
+            performSearch(e.state.word, false);
+          }
+        });
+      }
+
+      /**
+       * 核心搜尋函式
+       * 純前端發出 fetch 請求至萌典教育部資料庫 API
+       */
+      async function performSearch(queryWord, updateHistoryState = true) {
+        if (!queryWord) return;
+
+        showLoading();
+
+        // 更新網址歷史紀錄
+        if (updateHistoryState) {
+          const newUrl = `${window.location.pathname}?q=${encodeURIComponent(queryWord)}`;
+          window.history.pushState({ word: queryWord }, '', newUrl);
+        }
+
+        try {
+          const data = await fetchWordData(queryWord);
+          if (data) {
+            currentWordData = data;
+            currentHeteronymIndex = 0;
+            renderResult(data);
+            saveToHistory(queryWord);
+            renderHistory();
+          } else {
+            showError('查無此詞語', `在教育部國語辭典資料庫中未找到「${queryWord}」。`, queryWord);
+          }
+        } catch (err) {
+          console.error('查詢失敗:', err);
+          showError('連線或查詢異常', '無法取得教育部辭典資料，請檢查網路連線或稍後再試。', queryWord);
+        }
+      }
+
+      /**
+       * 串接教育部辭典開放 API（以萌典 MoEDict CORS API 為核心，支援多種備援）
+       */
+      async function fetchWordData(word) {
+        const cleanWord = word.trim();
+
+        // 1. 首選：raw API (乾淨字串，無 HTML 標記)
+        let result = await fetchJson(`https://www.moedict.tw/raw/${encodeURIComponent(cleanWord)}.json`);
+        if (isValidDictionaryResult(result)) {
+          return normalizeRawResult(result, cleanWord);
+        }
+
+        // 2. 備援嘗試：俗體/正體異體字轉換（如「台」與「臺」相互轉換嘗試）
+        const variantWord = convertVariants(cleanWord);
+        if (variantWord !== cleanWord) {
+          result = await fetchJson(`https://www.moedict.tw/raw/${encodeURIComponent(variantWord)}.json`);
+          if (isValidDictionaryResult(result)) {
+            return normalizeRawResult(result, variantWord);
+          }
+        }
+
+        // 3. 備援嘗試：兩岸詞典或修訂本 compact 端點
+        result = await fetchJson(`https://www.moedict.tw/c/${encodeURIComponent(cleanWord)}.json`);
+        if (isValidDictionaryResult(result)) {
+          return normalizeCompactResult(result, cleanWord);
+        }
+
+        result = await fetchJson(`https://www.moedict.tw/a/${encodeURIComponent(cleanWord)}.json`);
+        if (isValidDictionaryResult(result)) {
+          return normalizeCompactResult(result, cleanWord);
+        }
+
+        return null;
+      }
+
+      async function fetchJson(url) {
+        try {
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            mode: 'cors'
+          });
+          if (!res.ok) return null;
+          return await res.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function isValidDictionaryResult(json) {
+        if (!json) return false;
+        if (json.error) return false;
+        if (json.heteronyms && Array.isArray(json.heteronyms) && json.heteronyms.length > 0) return true;
+        if (json.h && Array.isArray(json.h) && json.h.length > 0) return true;
+        return false;
+      }
+
+      // 轉換台/臺等最常見之正俗異體字
+      function convertVariants(str) {
+        if (str.includes('台')) {
+          return str.replace(/台/g, '臺');
+        }
+        if (str.includes('臺')) {
+          return str.replace(/臺/g, '台');
+        }
+        return str;
+      }
+
+      /**
+       * 標準化 raw 端點回傳的資料格式
+       */
+      function normalizeRawResult(data, originalWord) {
+        return {
+          title: data.title || originalWord,
+          radical: cleanHtml(data.radical || ''),
+          stroke_count: data.stroke_count || 0,
+          non_radical_stroke_count: data.non_radical_stroke_count || 0,
+          heteronyms: (data.heteronyms || []).map(h => ({
+            bopomofo: cleanHtml(h.bopomofo || ''),
+            pinyin: cleanHtml(h.pinyin || ''),
+            audio_id: h['='] || null,
+            definitions: (h.definitions || []).map(d => ({
+              type: cleanHtml(d.type || ''),
+              def: cleanHtml(d.def || ''),
+              example: (d.example || []).map(cleanHtml),
+              quote: (d.quote || []).map(cleanHtml),
+              synonyms: cleanHtml(d.synonyms || ''),
+              antonyms: cleanHtml(d.antonyms || '')
+            }))
+          }))
+        };
+      }
+
+      /**
+       * 標準化 compact 端點 (如 /c/ 或 /a/) 回傳的資料格式
+       */
+      function normalizeCompactResult(data, originalWord) {
+        const title = (data.t || originalWord).replace(/[`~]/g, '');
+        return {
+          title: title,
+          radical: (data.r || '').replace(/[`~]/g, ''),
+          stroke_count: data.c || 0,
+          non_radical_stroke_count: data.n || 0,
+          heteronyms: (data.h || []).map(h => ({
+            bopomofo: (h.b || '').replace(/[`~]/g, ''),
+            pinyin: (h.p || '').replace(/[`~]/g, ''),
+            audio_id: h['='] || null,
+            definitions: (h.d || []).map(d => ({
+              type: (d.type || '').replace(/[`~]/g, ''),
+              def: (d.f || '').replace(/[`~]/g, ''),
+              example: (d.e || []).map(s => s.replace(/[`~]/g, '')),
+              quote: (d.q || []).map(s => s.replace(/[`~]/g, '')),
+              synonyms: (d.s || '').replace(/[`~]/g, ''),
+              antonyms: (d.a || '').replace(/[`~]/g, '')
+            }))
+          }))
+        };
+      }
+
+      function cleanHtml(str) {
+        if (!str) return '';
+        const temp = document.createElement('div');
+        temp.innerHTML = str;
+        return temp.textContent || temp.innerText || '';
+      }
+
+      /**
+       * 呈現查詢結果至畫面上
+       * 嚴格確保：
+       * 1. 詞語名稱字體：80pt
+       * 2. 詞語解釋文字字體：20pt
+       */
+      function renderResult(data) {
+        hideAllPanels();
+        resultCard.style.display = 'block';
+
+        // 1. 設定 80pt 大字體詞語標題
+        wordTitle.textContent = data.title;
+
+        // 2. 設定單字部首與筆畫（若為單字且有資料）
+        if (data.radical && data.radical.trim()) {
+          radicalText.textContent = data.radical.trim();
+          radicalBadge.style.display = 'inline-flex';
+        } else {
+          radicalBadge.style.display = 'none';
+        }
+
+        if (data.stroke_count && data.stroke_count > 0) {
+          strokeCountText.textContent = `${data.stroke_count} 畫`;
+          strokesBadge.style.display = 'inline-flex';
+        } else {
+          strokesBadge.style.display = 'none';
+        }
+
+        if (data.non_radical_stroke_count && data.non_radical_stroke_count > 0) {
+          nonRadicalStrokeText.textContent = `${data.non_radical_stroke_count} 畫`;
+          nonRadicalBadge.style.display = 'inline-flex';
+        } else {
+          nonRadicalBadge.style.display = 'none';
+        }
+
+        // 3. 設定官方辭典直達外連
+        const encodedTitle = encodeURIComponent(data.title);
+        moeConciseLink.href = `https://dict.concised.moe.edu.tw/search.jsp?md=1&word=${encodedTitle}`;
+        moeRevisedLink.href = `https://dict.revised.moe.edu.tw/search.jsp?md=1&word=${encodedTitle}`;
+        moedictLink.href = `https://www.moedict.tw/${encodedTitle}`;
+
+        // 4. 處理多音字 / 破音字標籤
+        renderHeteronyms(data.heteronyms);
+
+        // 滾動至結果卡片
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      /**
+       * 渲染發音群組與多音標籤
+       */
+      function renderHeteronyms(heteronyms) {
+        if (!heteronyms || heteronyms.length === 0) {
+          bopomofoText.textContent = '';
+          pinyinText.textContent = '';
+          heteronymsTabs.style.display = 'none';
+          definitionsList.innerHTML = '<p class="definition-text">無詳細釋義內容。</p>';
+          return;
+        }
+
+        // 若有多個讀音，呈現切換標籤
+        if (heteronyms.length > 1) {
+          heteronymsTabs.style.display = 'flex';
+          heteronymsTabs.innerHTML = '';
+          heteronyms.forEach((h, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `tab-item ${idx === currentHeteronymIndex ? 'active' : ''}`;
+            btn.textContent = `讀音 ${idx + 1}：${h.bopomofo || h.pinyin || '本音'}`;
+            btn.addEventListener('click', () => {
+              currentHeteronymIndex = idx;
+              document.querySelectorAll('.tab-item').forEach((t, i) => {
+                t.classList.toggle('active', i === idx);
+              });
+              updatePronunciationAndDefs(h);
+            });
+            heteronymsTabs.appendChild(btn);
+          });
+        } else {
+          heteronymsTabs.style.display = 'none';
+        }
+
+        updatePronunciationAndDefs(heteronyms[currentHeteronymIndex]);
+      }
+
+      /**
+       * 更新指定讀音之注音、拼音及 20pt 釋義列表
+       */
+      function updatePronunciationAndDefs(heteronym) {
+        if (!heteronym) return;
+
+        bopomofoText.textContent = heteronym.bopomofo || '—';
+        pinyinText.textContent = heteronym.pinyin ? `[ ${heteronym.pinyin} ]` : '';
+
+        // 渲染 20pt 大小之詞語解釋
+        definitionsList.innerHTML = '';
+
+        if (!heteronym.definitions || heteronym.definitions.length === 0) {
+          definitionsList.innerHTML = '<div class="definition-text">查無此音之詳細釋義。</div>';
+          return;
+        }
+
+        heteronym.definitions.forEach((defObj, index) => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'definition-item';
+
+          // 序號
+          const numEl = document.createElement('span');
+          numEl.className = 'def-number';
+          numEl.textContent = (index + 1).toString();
+
+          // 內文區塊
+          const contentEl = document.createElement('div');
+          contentEl.className = 'def-content';
+
+          // 詞性徽章 (若有)
+          let typeHtml = '';
+          if (defObj.type && defObj.type.trim()) {
+            typeHtml = `<span class="pos-badge" title="詞性">${escapeHtml(defObj.type.trim())}</span>`;
+          }
+
+          // 【規格重點】詞語解釋文字（20pt 大小）
+          const defTextEl = document.createElement('div');
+          defTextEl.className = 'definition-text';
+          defTextEl.innerHTML = `${typeHtml}${escapeHtml(defObj.def || '')}`;
+          contentEl.appendChild(defTextEl);
+
+          // 例句展示
+          if (defObj.example && defObj.example.length > 0) {
+            const exEl = document.createElement('div');
+            exEl.className = 'def-examples';
+            exEl.innerHTML = `<strong>例：</strong>${defObj.example.map(escapeHtml).join('<br>')}`;
+            contentEl.appendChild(exEl);
+          }
+
+          // 引文典故
+          if (defObj.quote && defObj.quote.length > 0) {
+            const quoteEl = document.createElement('div');
+            quoteEl.className = 'def-quotes';
+            quoteEl.innerHTML = `<strong>典故出處：</strong><br>${defObj.quote.map(escapeHtml).join('<br>')}`;
+            contentEl.appendChild(quoteEl);
+          }
+
+          // 相似詞與相反詞
+          if ((defObj.synonyms && defObj.synonyms.trim()) || (defObj.antonyms && defObj.antonyms.trim())) {
+            const relEl = document.createElement('div');
+            relEl.className = 'synonyms-antonyms';
+
+            if (defObj.synonyms && defObj.synonyms.trim()) {
+              relEl.innerHTML += `
+                <div class="relation-group">
+                  <span class="relation-label">似：</span>
+                  <span class="relation-words">${escapeHtml(defObj.synonyms)}</span>
+                </div>
+              `;
+            }
+
+            if (defObj.antonyms && defObj.antonyms.trim()) {
+              relEl.innerHTML += `
+                <div class="relation-group">
+                  <span class="relation-label">反：</span>
+                  <span class="relation-words">${escapeHtml(defObj.antonyms)}</span>
+                </div>
+              `;
+            }
+
+            contentEl.appendChild(relEl);
+          }
+
+          itemEl.appendChild(numEl);
+          itemEl.appendChild(contentEl);
+          definitionsList.appendChild(itemEl);
+        });
+      }
+
+      /**
+       * 語音朗讀功能 (Web Speech API zh-TW)
+       */
+      function speakCurrentWord() {
+        if (!currentWordData || !currentWordData.title) return;
+
+        if (!('speechSynthesis' in window)) {
+          alert('您的瀏覽器不支援 Web Speech API 語音合成。');
+          return;
+        }
+
+        window.speechSynthesis.cancel(); // 停止目前正在播放之聲音
+
+        const utterance = new SpeechSynthesisUtterance(currentWordData.title);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.85; // 稍微放慢語速，使發音更字正腔圓
+
+        // 嘗試選取台灣國語語音
+        const voices = window.speechSynthesis.getVoices();
+        const twVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh_TW');
+        if (twVoice) {
+          utterance.voice = twVoice;
+        }
+
+        // 動畫回饋
+        speakBtn.textContent = '🔊 播放中...';
+        utterance.onend = () => {
+          speakBtn.textContent = '🔊 聆聽發音';
+        };
+        utterance.onerror = () => {
+          speakBtn.textContent = '🔊 聆聽發音';
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+
+      /**
+       * 複製目前詞語與釋義至剪貼簿
+       */
+      function copyExplanationToClipboard() {
+        if (!currentWordData) return;
+
+        let copyText = `【${currentWordData.title}】\n`;
+        const currentHeteronym = currentWordData.heteronyms[currentHeteronymIndex];
+        if (currentHeteronym) {
+          if (currentHeteronym.bopomofo) copyText += `注音：${currentHeteronym.bopomofo}\n`;
+          if (currentHeteronym.pinyin) copyText += `漢語拼音：${currentHeteronym.pinyin}\n`;
+          copyText += `釋義：\n`;
+          currentHeteronym.definitions.forEach((d, idx) => {
+            copyText += `${idx + 1}. ${d.type ? `[${d.type}] ` : ''}${d.def}\n`;
+            if (d.example && d.example.length) copyText += `   例：${d.example.join('；')}\n`;
+          });
+        }
+        copyText += `\n（資料來源：教育部國語辭典 / 萌典開放資料庫）`;
+
+        navigator.clipboard.writeText(copyText).then(() => {
+          const orig = copyBtn.innerHTML;
+          copyBtn.innerHTML = '✅ 已複製！';
+          setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
+        }).catch(() => {
+          alert('複製失敗，請手動選取文字複製。');
+        });
+      }
+
+      /**
+       * 顯示載入狀態
+       */
+      function showLoading() {
+        hideAllPanels();
+        loadingPanel.style.display = 'block';
+      }
+
+      /**
+       * 顯示錯誤提示，並針對多字詞提供單字分拆查詢按鈕
+       */
+      function showError(title, desc, searchedWord) {
+        hideAllPanels();
+        errorTitle.textContent = title;
+        errorDesc.textContent = desc;
+
+        // 若查詢的詞彙大於 1 個字，提供分拆單字建議
+        if (searchedWord && searchedWord.length > 1) {
+          splitButtons.innerHTML = '';
+          const chars = Array.from(searchedWord);
+          chars.forEach(char => {
+            if (/[\u4e00-\u9fa5]/.test(char)) { // 僅正體中文字
+              const btn = document.createElement('button');
+              btn.className = 'chip-item';
+              btn.textContent = `查「${char}」字`;
+              btn.addEventListener('click', () => {
+                searchInput.value = char;
+                clearBtn.style.display = 'block';
+                performSearch(char, true);
+              });
+              splitButtons.appendChild(btn);
+            }
+          });
+
+          if (splitButtons.children.length > 0) {
+            splitSuggestBox.style.display = 'block';
+          } else {
+            splitSuggestBox.style.display = 'none';
+          }
+        } else {
+          splitSuggestBox.style.display = 'none';
+        }
+
+        errorPanel.style.display = 'block';
+      }
+
+      function hideAllPanels() {
+        loadingPanel.style.display = 'none';
+        errorPanel.style.display = 'none';
+        resultCard.style.display = 'none';
+      }
+
+      /**
+       * 歷史紀錄存取
+       */
+      function getHistory() {
+        try {
+          const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveToHistory(word) {
+        if (!word) return;
+        let list = getHistory();
+        list = list.filter(w => w !== word);
+        list.unshift(word);
+        if (list.length > MAX_HISTORY) list = list.slice(0, MAX_HISTORY);
+        try {
+          localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+      }
+
+      function renderHistory() {
+        const list = getHistory();
+        if (list.length === 0) {
+          historyChipsContainer.style.display = 'none';
+          return;
+        }
+
+        historyChipsContainer.style.display = 'flex';
+        historyChipsList.innerHTML = '';
+        list.forEach(word => {
+          const chip = document.createElement('span');
+          chip.className = 'chip-item';
+          chip.textContent = word;
+          chip.addEventListener('click', () => {
+            searchInput.value = word;
+            clearBtn.style.display = 'block';
+            performSearch(word, true);
+          });
+          historyChipsList.appendChild(chip);
+        });
+      }
+
+      function clearHistory() {
+        try {
+          localStorage.removeItem(HISTORY_STORAGE_KEY);
+        } catch (e) {}
+        renderHistory();
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+    })();
+  </script>
+</body>
+</html>
