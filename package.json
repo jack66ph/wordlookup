@@ -1,0 +1,9 @@
+﻿{
+  "name": "search-chinese-character",
+  "version": "1.0.0",
+  "description": "查國字系統網頁伺服器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
